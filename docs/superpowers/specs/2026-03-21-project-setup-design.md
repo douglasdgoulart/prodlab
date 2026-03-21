@@ -12,16 +12,18 @@ Este documento especifica o setup técnico inicial do projeto (scaffold, auth, e
 
 ## Decisões
 
-| Decisão | Escolha | Motivo |
-|---------|---------|--------|
-| Framework | React + Vite + TypeScript + SWC | SPA didático, sem necessidade de SSR |
-| Estilo | Tailwind CSS + shadcn/ui | Setup via CLI, componentes acessíveis e customizáveis |
-| Estado | Zustand | Leve, sem boilerplate |
-| Backend | Supabase Cloud | Auth, Postgres, Edge Functions — tudo gerenciado |
-| Auth | Google OAuth via Supabase | Login institucional por domínio de email |
-| Roteamento | react-router-dom | Padrão para SPAs React |
-| Estrutura | Monorepo simples (tudo na raiz) | Projeto único, sem necessidade de separação |
-| Deploy | Não definido ainda | Foco em dev local por enquanto |
+
+| Decisão    | Escolha                         | Motivo                                                |
+| ---------- | ------------------------------- | ----------------------------------------------------- |
+| Framework  | React + Vite + TypeScript + SWC | SPA didático, sem necessidade de SSR                  |
+| Estilo     | Tailwind CSS + shadcn/ui        | Setup via CLI, componentes acessíveis e customizáveis |
+| Estado     | Zustand                         | Leve, sem boilerplate                                 |
+| Backend    | Supabase Cloud                  | Auth, Postgres, Edge Functions — tudo gerenciado      |
+| Auth       | Google OAuth via Supabase       | Login institucional por domínio de email              |
+| Roteamento | react-router-dom                | Padrão para SPAs React                                |
+| Estrutura  | Monorepo simples (tudo na raiz) | Projeto único, sem necessidade de separação           |
+| Deploy     | Não definido ainda              | Foco em dev local por enquanto                        |
+
 
 ## Arquitetura
 
@@ -86,9 +88,9 @@ src/
 3. Google retorna token para `/auth/callback`.
 4. Rota `/auth/callback` processa o token via `supabase.auth.exchangeCodeForSession()`.
 5. Trigger no Postgres (`AFTER INSERT ON auth.users`) cria registro em `profiles`:
-   - `@al.unieduk.com.br` → role `student`
-   - `@prof.unieduk.com.br` → role `teacher`
-   - Qualquer outro domínio → role `denied`
+  - `@al.unieduk.com.br` → role `student`
+  - `@prof.unieduk.com.br` → role `teacher`
+  - Qualquer outro domínio → role `denied`
 6. `providers.tsx` escuta `onAuthStateChange`, lê `profiles.role` e atualiza Zustand.
 7. Se role é `denied`, redireciona para `/unauthorized` e destrói sessão.
 8. Se role é `student`, redireciona para `/dashboard`.
@@ -161,6 +163,7 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
 Fonte única de verdade: Zustand (`auth-store.ts`).
 
 `providers.tsx` faz o bootstrap:
+
 1. Na montagem, chama `supabase.auth.getSession()` pra recuperar sessão existente.
 2. Registra `supabase.auth.onAuthStateChange()` pra manter o store sincronizado.
 3. Quando há sessão ativa, busca `profiles.role` e atualiza o store.
@@ -182,6 +185,7 @@ Nenhum outro componente acessa Supabase Auth diretamente — tudo passa pelo Zus
 ## Dashboard shell do aluno
 
 O dashboard do aluno terá:
+
 - Header com nome e email do aluno.
 - Trilha visual dos 6 módulos PCP (todos visíveis, só o primeiro clicável no futuro).
 - Área de conteúdo central vazia — preparada para receber o módulo de previsão como componente.
@@ -191,6 +195,7 @@ O módulo de previsão será adicionado como rota aninhada (`/dashboard/previsao
 ## Dashboard shell do professor
 
 Página mínima que prova o roteamento por role:
+
 - Header com nome e email do professor.
 - Mensagem: "Painel do professor — em construção."
 
@@ -198,16 +203,19 @@ Funcionalidades do professor (gestão de casos, acompanhamento de alunos) são e
 
 ## Pacotes
 
-| Pacote | Função |
-|--------|--------|
-| `vite` + `@vitejs/plugin-react-swc` | Build + HMR |
-| `react` + `react-dom` | UI |
-| `react-router-dom` | Rotas |
-| `tailwindcss` + `shadcn/ui` | Estilo + componentes |
-| `@supabase/supabase-js` | Client Supabase |
-| `zustand` | Estado global |
+
+| Pacote                              | Função               |
+| ----------------------------------- | -------------------- |
+| `vite` + `@vitejs/plugin-react-swc` | Build + HMR          |
+| `react` + `react-dom`               | UI                   |
+| `react-router-dom`                  | Rotas                |
+| `tailwindcss` + `shadcn/ui`         | Estilo + componentes |
+| `@supabase/supabase-js`             | Client Supabase      |
+| `zustand`                           | Estado global        |
+
 
 Pacotes futuros (não instalados no setup):
+
 - `recharts` — gráficos do módulo de previsão
 - LLM SDK (a definir) — assistente de IA didático
 
@@ -227,6 +235,35 @@ npm i @supabase/supabase-js zustand react-router-dom
 - Gráficos (recharts)
 - Dashboard funcional do professor
 - Deploy
+
+## Responsividade
+
+Todas as telas devem ser **mobile-first** e totalmente adaptáveis. O dispositivo primário é desktop, mas a experiência mobile deve ser funcional e completa.
+
+### Breakpoints
+
+| Nome | Largura mínima | Uso |
+|------|---------------|-----|
+| `sm` | 640px | Mobile grande / landscape |
+| `md` | 768px | Tablet |
+| `lg` | 1024px | Desktop |
+
+### Regras por tela
+
+| Tela | Desktop (lg+) | Mobile (< md) |
+|------|--------------|---------------|
+| Login | Card centralizado, largura máx 400px | Card 100% largura, padding lateral |
+| Dashboard Aluno | Trilha horizontal, conteúdo centralizado (max 1024px) | Trilha compacta/scroll horizontal, conteúdo 100% largura |
+| Dashboard Professor | Mesmo padrão do aluno | Mesmo padrão do aluno |
+| Módulo de Previsão (futuro) | 3 colunas (dicas \| conteúdo \| assistente IA) | Empilhado: conteúdo principal, dicas colapsáveis, assistente em drawer/bottom sheet |
+
+### Diretrizes gerais
+
+- Usar classes responsivas do Tailwind (`sm:`, `md:`, `lg:`) em vez de media queries manuais.
+- Componentes shadcn/ui já são responsivos por padrão — manter esse comportamento.
+- Inputs e botões devem ter área de toque mínima de 44x44px no mobile.
+- Navegação: sem sidebar no MVP. Header simples adaptável (collapsa em menu hamburger no mobile se necessário).
+- Testar em viewport 375px (iPhone SE) como baseline mobile.
 
 ## Design System
 
