@@ -25,7 +25,7 @@ export function Unauthorized() {
         </CardHeader>
         <CardContent className="text-center">
           <p className="text-sm mb-6" style={{ color: 'var(--color-muted)' }}>
-            Apenas emails institucionais (@al.unieduk.com.br ou @prof.unieduk.com.br) podem acessar o ProdLab.
+            Apenas emails institucionais (@al.unieduk.com.br) podem acessar o ProdLab.
           </p>
           <Button
             onClick={handleGoBack}
