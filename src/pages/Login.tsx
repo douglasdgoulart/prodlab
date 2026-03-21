@@ -42,7 +42,7 @@ export function Login() {
 
           <div className="mt-12">
             <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-              Uma iniciativa de:
+              Um oferecimento:
             </p>
             <div className="mt-3 flex items-center gap-6">
               <img

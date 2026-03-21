@@ -51,3 +51,33 @@ export const useAuthStore = create<AuthState>((set) => ({
     return data.role as UserRole;
   },
 }));
+
+// Bootstrap: roda uma vez no carregamento do módulo
+async function initAuth() {
+  const { setAuth, setLoading, setInitialized, fetchRole } =
+    useAuthStore.getState();
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (session?.user) {
+    const role = await fetchRole(session.user.id);
+    setAuth(session.user, role);
+  }
+
+  setLoading(false);
+  setInitialized();
+
+  supabase.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' && session?.user) {
+      const role = await fetchRole(session.user.id);
+      setAuth(session.user, role);
+    } else if (event === 'SIGNED_OUT') {
+      setAuth(null, null);
+    }
+    setLoading(false);
+  });
+}
+
+initAuth();
