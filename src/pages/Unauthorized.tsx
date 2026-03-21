@@ -1,15 +1,13 @@
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { useAuthStore } from '../stores/auth-store';
-import { useNavigate } from 'react-router-dom';
 
 export function Unauthorized() {
   const { signOut } = useAuthStore();
-  const navigate = useNavigate();
 
   const handleGoBack = async () => {
     await signOut();
-    navigate('/', { replace: true });
+    window.location.href = '/';
   };
 
   return (
