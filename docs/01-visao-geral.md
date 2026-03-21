@@ -133,7 +133,9 @@ O projeto segue uma abordagem de **MVP por módulo**, priorizando qualidade sobr
 
 ## Stack técnica
 
-- **Frontend:** HTML + Tailwind CSS v3
+- **Frontend:** React + Vite + TypeScript + Tailwind CSS + shadcn/ui
+- **Backend:** Supabase Cloud (Auth, Postgres, Edge Functions)
+- **Estado:** Zustand
 - **Dispositivo primário:** Desktop (PC), com responsividade para mobile.
 
 ---
