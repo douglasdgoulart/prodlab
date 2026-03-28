@@ -2,28 +2,27 @@ import { supabase } from "./supabase"
 import type { AvailableStudent, Group, GroupMember } from "@/types"
 
 /**
- * Search available students by name (ILIKE).
- * Returns only id + full_name. Students already in confirmed groups
- * or with active reservations (< 10 min) are excluded by the view.
+ * Search available students by name.
+ * Uses a SECURITY DEFINER RPC that verifies caller is student/teacher,
+ * filters by ILIKE, and excludes confirmed/reserved students.
  */
 export async function searchAvailableStudents(
   query: string,
   excludeIds: string[] = []
 ): Promise<AvailableStudent[]> {
-  let builder = supabase
-    .from("available_students")
-    .select("id, full_name")
-    .ilike("full_name", `%${query}%`)
-    .limit(10)
-
-  if (excludeIds.length > 0) {
-    builder = builder.not("id", "in", `(${excludeIds.join(",")})`)
-  }
-
-  const { data, error } = await builder
+  const { data, error } = await supabase.rpc("search_available_students", {
+    search_query: query,
+  })
 
   if (error) throw error
-  return data ?? []
+
+  const results = (data ?? []) as AvailableStudent[]
+
+  if (excludeIds.length > 0) {
+    return results.filter((s) => !excludeIds.includes(s.id))
+  }
+
+  return results
 }
 
 /**
