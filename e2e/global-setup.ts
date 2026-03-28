@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js"
-import { PRODUCT_FAMILY_IDS, TEST_EMAILS, ALL_TEST_EMAILS } from "./test-ids"
+import { PRODUCT_FAMILY_IDS, TEST_EMAILS, ALL_TEST_EMAILS, CLASS_IDS } from "./test-ids"
 
 // Dedicated admin client — never used for verifyOtp
 const supabase = createClient(
@@ -80,7 +80,29 @@ export default async function globalSetup() {
     console.log(`  ✓ Product Family: ${family.name} (${family.id})`)
   }
 
-  // 3. Clean groups from previous runs (only test users' groups)
+  // 3. Classes (fixed IDs for safe teardown)
+  await supabase.from("classes").upsert(
+    { id: CLASS_IDS.turmaNoturno, name: "Eng. Produção - 2026/1 - Noturno", created_by: teacherId },
+    { onConflict: "id" }
+  )
+  await supabase.from("classes").upsert(
+    { id: CLASS_IDS.turmaMatutino, name: "Eng. Produção - 2026/1 - Matutino", created_by: teacherId },
+    { onConflict: "id" }
+  )
+  console.log("  ✓ Classes created")
+
+  // 4. Add all test students to turmaNoturno
+  const studentEmails = ALL_TEST_EMAILS.filter((e) => e.includes("@al."))
+  for (const email of studentEmails) {
+    const studentId = await ensureUser(email, TEST_USERS.find((u) => u.email === email)!.name)
+    await supabase.from("class_members").upsert(
+      { class_id: CLASS_IDS.turmaNoturno, student_id: studentId },
+      { onConflict: "class_id,student_id" }
+    )
+  }
+  console.log("  ✓ Students added to turmaNoturno")
+
+  // 5. Clean groups from previous runs (only test users' groups)
   const { data: testProfiles } = await supabase
     .from("profiles")
     .select("id")

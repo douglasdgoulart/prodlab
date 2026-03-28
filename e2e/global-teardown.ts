@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js"
-import { ALL_PRODUCT_FAMILY_IDS, ALL_TEST_EMAILS } from "./test-ids"
+import { ALL_PRODUCT_FAMILY_IDS, ALL_TEST_EMAILS, ALL_CLASS_IDS } from "./test-ids"
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL!,
@@ -24,6 +24,16 @@ export default async function globalTeardown() {
     await supabase.from("groups").delete().in("created_by", testUserIds)
     console.log(`  ✓ Groups/members cleaned (${testUserIds.length} test users)`)
   }
+
+  // Delete class memberships for test students
+  if (testUserIds.length > 0) {
+    await supabase.from("class_members").delete().in("student_id", testUserIds)
+  }
+  console.log("  ✓ Class memberships cleaned")
+
+  // Delete test classes (by fixed IDs)
+  await supabase.from("classes").delete().in("id", ALL_CLASS_IDS)
+  console.log(`  ✓ Classes cleaned (${ALL_CLASS_IDS.length} entries)`)
 
   // Delete only test product families (by fixed IDs)
   await supabase.from("product_families").delete().in("id", ALL_PRODUCT_FAMILY_IDS)

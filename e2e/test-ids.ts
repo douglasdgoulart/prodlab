@@ -27,3 +27,11 @@ export const TEST_EMAILS = {
 } as const
 
 export const ALL_TEST_EMAILS = Object.values(TEST_EMAILS)
+
+// Class IDs (test-only, prefixed with bbbb)
+export const CLASS_IDS = {
+  turmaNoturno: "bbbb0001-0000-0000-0000-000000000001",
+  turmaMatutino: "bbbb0001-0000-0000-0000-000000000002",
+} as const
+
+export const ALL_CLASS_IDS = Object.values(CLASS_IDS)

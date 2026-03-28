@@ -101,7 +101,8 @@ export async function cleanAllTestGroups() {
  */
 export async function seedGroupAtStep2(
   ownerEmail: string,
-  partnerEmail: string
+  partnerEmail: string,
+  classId: string
 ): Promise<string> {
   const ownerId = await getProfileId(ownerEmail)
   const partnerId = await getProfileId(partnerEmail)
@@ -111,7 +112,7 @@ export async function seedGroupAtStep2(
 
   const { data: group, error } = await adminDb
     .from("groups")
-    .insert({ created_by: ownerId, status: "forming" })
+    .insert({ created_by: ownerId, status: "forming", class_id: classId })
     .select("id")
     .single()
 
@@ -123,6 +124,11 @@ export async function seedGroupAtStep2(
   ])
 
   return group.id
+}
+
+export async function removeFromAllClasses(email: string) {
+  const id = await getProfileId(email)
+  await adminDb.from("class_members").delete().eq("student_id", id)
 }
 
 /**
