@@ -1,5 +1,6 @@
 import { type Page } from "@playwright/test"
 import { createClient } from "@supabase/supabase-js"
+import { ALL_TEST_EMAILS } from "../test-ids"
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL!
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -35,16 +36,18 @@ export async function injectSession(page: Page, email: string) {
 }
 
 /**
- * Clean up all groups from the database (for test isolation).
+ * Clean up groups belonging to test users only (safe for shared DBs).
  */
 export async function cleanGroups() {
-  await supabase
-    .from("group_members")
-    .delete()
-    .neq("id", "00000000-0000-0000-0000-000000000000")
+  const { data: testProfiles } = await supabase
+    .from("profiles")
+    .select("id")
+    .in("email", ALL_TEST_EMAILS)
 
-  await supabase
-    .from("groups")
-    .delete()
-    .neq("id", "00000000-0000-0000-0000-000000000000")
+  const testUserIds = testProfiles?.map((p) => p.id) ?? []
+
+  if (testUserIds.length > 0) {
+    await supabase.from("group_members").delete().in("student_id", testUserIds)
+    await supabase.from("groups").delete().in("created_by", testUserIds)
+  }
 }
