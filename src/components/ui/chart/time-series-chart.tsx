@@ -5,7 +5,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
   ReferenceArea,
   ReferenceLine,
@@ -199,10 +198,6 @@ function TimeSeriesChart({
               />
             )}
 
-            <Legend
-              wrapperStyle={{ fontSize: 12, fontFamily: "Outfit, system-ui, sans-serif", paddingTop: 8 }}
-              iconType="plainline"
-            />
               </LineChart>
             </ResponsiveContainer>
             {xLabel && (
@@ -210,6 +205,24 @@ function TimeSeriesChart({
                 {xLabel}
               </p>
             )}
+            <div className="flex items-center justify-center gap-4 pt-2">
+              <span className="flex items-center gap-1.5 text-xs font-sans text-muted-foreground">
+                <span className="inline-block w-4 h-0 border-t-2 border-chart-1" />
+                Histórico
+              </span>
+              {hasTrend && (
+                <span className="flex items-center gap-1.5 text-xs font-sans text-muted-foreground">
+                  <span className="inline-block w-4 h-0 border-t-[1.5px] border-dashed border-chart-2" />
+                  Tendência
+                </span>
+              )}
+              {hasForecast && (
+                <span className="flex items-center gap-1.5 text-xs font-sans text-muted-foreground">
+                  <span className="inline-block w-4 h-0 border-t-2 border-chart-3" />
+                  Previsão
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </div>
