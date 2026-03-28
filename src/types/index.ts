@@ -33,6 +33,7 @@ export interface Group {
   product_family_id: string | null;
   status: GroupStatus;
   created_by: string;
+  class_id: string;
   created_at: string;
 }
 
@@ -48,4 +49,18 @@ export interface GroupMember {
 export interface AvailableStudent {
   id: string;
   full_name: string | null;
+}
+
+export interface Class {
+  id: string;
+  name: string;
+  created_by: string;
+  created_at: string;
+}
+
+export interface ClassMember {
+  id: string;
+  class_id: string;
+  student_id: string;
+  created_at: string;
 }
