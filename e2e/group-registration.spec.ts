@@ -4,7 +4,7 @@ import {
   cleanGroupsFor,
   seedGroupAtStep2,
 } from "./helpers/auth"
-import { TEST_EMAILS } from "./test-ids"
+import { TEST_EMAILS, CLASS_IDS } from "./test-ids"
 
 /**
  * Each test uses a DIFFERENT student to avoid cross-test contamination.
@@ -106,7 +106,7 @@ test.describe("Group Registration Wizard", () => {
     await adminDb.from("group_members").delete().eq("student_id", partnerId)
     const { data: group } = await adminDb
       .from("groups")
-      .insert({ created_by: ownerId, company_name: "TestCorp", status: "complete" })
+      .insert({ created_by: ownerId, company_name: "TestCorp", status: "complete", class_id: CLASS_IDS.turmaNoturno })
       .select("id")
       .single()
     await adminDb.from("group_members").insert([
@@ -125,7 +125,7 @@ test.describe("Group Registration Wizard", () => {
     page,
   }) => {
     // Pre-populate group at step 2
-    await seedGroupAtStep2(TEST_EMAILS.mariana, TEST_EMAILS.ana)
+    await seedGroupAtStep2(TEST_EMAILS.mariana, TEST_EMAILS.ana, CLASS_IDS.turmaNoturno)
     await loginAndGoToRegister(page, TEST_EMAILS.mariana)
 
     await expect(page.getByText("Detalhes do grupo")).toBeVisible()
@@ -179,7 +179,7 @@ test.describe("Group Registration Wizard", () => {
   })
 
   test("cannot finalize without company name", async ({ page }) => {
-    await seedGroupAtStep2(TEST_EMAILS.joao, TEST_EMAILS.marina)
+    await seedGroupAtStep2(TEST_EMAILS.joao, TEST_EMAILS.marina, CLASS_IDS.turmaNoturno)
     await loginAndGoToRegister(page, TEST_EMAILS.joao)
 
     await expect(page.getByText("Detalhes do grupo")).toBeVisible()
@@ -191,7 +191,7 @@ test.describe("Group Registration Wizard", () => {
   })
 
   test("cannot finalize without product family", async ({ page }) => {
-    await seedGroupAtStep2(TEST_EMAILS.marina, TEST_EMAILS.mariana)
+    await seedGroupAtStep2(TEST_EMAILS.marina, TEST_EMAILS.mariana, CLASS_IDS.turmaNoturno)
     await loginAndGoToRegister(page, TEST_EMAILS.marina)
 
     await expect(page.getByText("Detalhes do grupo")).toBeVisible()
@@ -204,7 +204,7 @@ test.describe("Group Registration Wizard", () => {
   test("company name too short (< 3 chars) keeps finalize disabled", async ({
     page,
   }) => {
-    await seedGroupAtStep2(TEST_EMAILS.ana, TEST_EMAILS.carlos)
+    await seedGroupAtStep2(TEST_EMAILS.ana, TEST_EMAILS.carlos, CLASS_IDS.turmaNoturno)
     await loginAndGoToRegister(page, TEST_EMAILS.ana)
 
     await expect(page.getByText("Detalhes do grupo")).toBeVisible()

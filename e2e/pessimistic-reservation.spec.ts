@@ -5,7 +5,7 @@ import {
   loginAndGoToRegister,
   cleanGroupsFor,
 } from "./helpers/auth"
-import { TEST_EMAILS } from "./test-ids"
+import { TEST_EMAILS, CLASS_IDS } from "./test-ids"
 
 test.describe("Pessimistic Reservation", () => {
   test("adding a member creates a 'reserved' record in the database", async ({ page }) => {
@@ -39,7 +39,7 @@ test.describe("Pessimistic Reservation", () => {
 
     const { data: group } = await adminDb
       .from("groups")
-      .insert({ created_by: carlosId })
+      .insert({ created_by: carlosId, class_id: CLASS_IDS.turmaNoturno })
       .select("id")
       .single()
 
