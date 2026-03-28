@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import { useGroupStore } from "@/stores/group-store"
 import { useAuth } from "@/hooks/use-auth"
+import { getStudentClass } from "@/lib/group-api"
 import { Stepper } from "@/components/ui/stepper"
 import { GroupMembersStep } from "./GroupMembersStep"
 import { GroupDetailsStep } from "./GroupDetailsStep"
@@ -20,6 +21,13 @@ function GroupRegistrationWizard() {
     bootstrappedRef.current = true
 
     async function bootstrap() {
+      // Check class membership first
+      const cls = await getStudentClass(user!.id)
+      if (!cls) {
+        navigate("/waiting", { replace: true })
+        return
+      }
+
       const status = await loadExistingGroup(user!.id)
 
       if (status === "complete") {
@@ -28,9 +36,9 @@ function GroupRegistrationWizard() {
       }
 
       if (status === "none") {
-        await initGroup(user!.id)
+        await initGroup(user!.id, cls.id)
       }
-      // "forming" -> store already set step to 1
+      // "forming" -> store already set step to 1 and classId
     }
 
     bootstrap()

@@ -8,6 +8,7 @@ import { GroupRegistration } from '../pages/GroupRegistration';
 import { ProtectedRoute } from '../components/ProtectedRoute';
 import { RoleRoute } from '../components/RoleRoute';
 import { GroupRoute } from '../components/GroupRoute';
+import { WaitingForClassPage } from '../pages/WaitingForClassPage';
 
 export const router = createBrowserRouter([
   {
@@ -17,6 +18,16 @@ export const router = createBrowserRouter([
   {
     path: '/auth/callback',
     element: <AuthCallback />,
+  },
+  {
+    path: '/waiting',
+    element: (
+      <ProtectedRoute>
+        <RoleRoute allowedRole="student">
+          <WaitingForClassPage />
+        </RoleRoute>
+      </ProtectedRoute>
+    ),
   },
   {
     path: '/register',
