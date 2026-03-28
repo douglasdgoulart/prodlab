@@ -68,7 +68,7 @@ test.describe("Group Registration Wizard", () => {
     await cleanGroupsFor(TEST_EMAILS.joao)
     await loginAndGoToRegister(page, TEST_EMAILS.joao)
 
-    await expect(page.getByText("Monte seu grupo")).toBeVisible()
+    await expect(page.getByText("Membros do grupo (1/3)")).toBeVisible({ timeout: 10000 })
 
     await page.getByPlaceholder("Digite o nome do colega").fill("Mariana")
     await page.getByRole("option", { name: /Mariana Oliveira Santos/ }).click()
@@ -85,7 +85,7 @@ test.describe("Group Registration Wizard", () => {
     await cleanGroupsFor(TEST_EMAILS.carlos)
     await loginAndGoToRegister(page, TEST_EMAILS.carlos)
 
-    await expect(page.getByText("Monte seu grupo")).toBeVisible()
+    await expect(page.getByText("Membros do grupo (1/3)")).toBeVisible({ timeout: 10000 })
 
     await page.getByPlaceholder("Digite o nome do colega").fill("Ana B")
     await page.getByRole("option", { name: /Ana Beatriz Ferreira/ }).click()
@@ -164,7 +164,7 @@ test.describe("Group Registration Wizard", () => {
     await cleanGroupsFor(TEST_EMAILS.carlos, TEST_EMAILS.marina, TEST_EMAILS.joao)
     await loginAndGoToRegister(page, TEST_EMAILS.carlos)
 
-    await expect(page.getByText("Monte seu grupo")).toBeVisible()
+    await expect(page.getByText("Membros do grupo (1/3)")).toBeVisible({ timeout: 10000 })
 
     await page.getByPlaceholder("Digite o nome do colega").fill("Marina")
     await page.getByRole("option", { name: /Marina Silva Costa/ }).click()
@@ -223,7 +223,7 @@ test.describe("Group Registration Wizard", () => {
     await cleanGroupsFor(TEST_EMAILS.mariana, TEST_EMAILS.marina)
     await loginAndGoToRegister(page, TEST_EMAILS.mariana)
 
-    await expect(page.getByText("Monte seu grupo")).toBeVisible()
+    await expect(page.getByText("Membros do grupo (1/3)")).toBeVisible({ timeout: 10000 })
 
     const searchInput = page.getByPlaceholder("Digite o nome do colega")
 

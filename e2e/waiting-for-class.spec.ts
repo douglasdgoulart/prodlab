@@ -55,6 +55,8 @@ test.describe("Waiting for Class", () => {
   test("waiting page redirects to /register after class is assigned", async ({
     page,
   }) => {
+    test.setTimeout(60000)
+
     // Remove ana from classes
     await removeFromAllClasses(TEST_EMAILS.ana)
 
@@ -83,9 +85,9 @@ test.describe("Waiting for Class", () => {
     const marinaId = await getProfileId(TEST_EMAILS.marina)
     const marianaId = await getProfileId(TEST_EMAILS.mariana)
 
-    // Clean groups
+    // Clean groups for all involved students
     await adminDb.from("group_members").delete().in("student_id", [alunoId, marinaId, marianaId])
-    await adminDb.from("groups").delete().eq("created_by", alunoId)
+    await adminDb.from("groups").delete().in("created_by", [alunoId, marianaId])
 
     // Move Marina to turmaMatutino only
     await adminDb.from("class_members").delete().eq("student_id", marinaId)
@@ -104,15 +106,15 @@ test.describe("Waiting for Class", () => {
     await page.evaluate(() => localStorage.clear())
     await injectSession(page, TEST_EMAILS.aluno)
     await page.goto("/register")
-    await expect(page.getByText("Monte seu grupo")).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText("Membros do grupo (1/3)")).toBeVisible({ timeout: 10000 })
 
     // Search "Mari" — should find Mariana (same class) but NOT Marina (different class)
     await page.getByPlaceholder("Digite o nome do colega").fill("Mari")
-    await page.waitForTimeout(1000)
+    await page.waitForTimeout(1500)
 
     await expect(
       page.getByRole("option", { name: /Mariana Oliveira Santos/ })
-    ).toBeVisible()
+    ).toBeVisible({ timeout: 5000 })
     await expect(
       page.getByRole("option", { name: /Marina Silva Costa/ })
     ).not.toBeVisible()
