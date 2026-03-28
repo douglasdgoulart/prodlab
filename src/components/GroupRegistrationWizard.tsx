@@ -1,4 +1,4 @@
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import { useGroupStore } from "@/stores/group-store"
 import { useAuth } from "@/hooks/use-auth"
@@ -13,9 +13,11 @@ function GroupRegistrationWizard() {
   const { user } = useAuth()
   const { step, group, loading, initGroup, loadExistingGroup } =
     useGroupStore()
+  const bootstrappedRef = useRef(false)
 
   useEffect(() => {
-    if (!user) return
+    if (!user || bootstrappedRef.current) return
+    bootstrappedRef.current = true
 
     async function bootstrap() {
       const status = await loadExistingGroup(user!.id)

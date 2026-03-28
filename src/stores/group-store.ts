@@ -173,13 +173,16 @@ export const useGroupStore = create<GroupState>((set, get) => ({
   },
 
   finalize: async () => {
-    const { groupId, companyName, productFamilyId } = get()
+    const { groupId, group, companyName, productFamilyId } = get()
     if (!groupId) return
 
     set({ loading: true, error: null })
     try {
       await groupApi.finalizeGroup(groupId, companyName, productFamilyId)
-      set({ loading: false })
+      set({
+        loading: false,
+        group: group ? { ...group, status: "complete", company_name: companyName, product_family_id: productFamilyId } : null,
+      })
     } catch {
       set({ loading: false, error: "Erro ao finalizar cadastro" })
     }
