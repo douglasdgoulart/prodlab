@@ -106,43 +106,24 @@ function TimeSeriesChart({
 
       <div className="rounded-xl border border-border bg-card p-4">
         <ResponsiveContainer width="100%" height={height}>
-          <LineChart data={chartData} margin={{ top: 8, right: 16, left: 8, bottom: 0 }}>
+          <LineChart data={chartData} margin={{ top: 8, right: 24, left: 0, bottom: 4 }}>
             <CartesianGrid
               strokeDasharray="3 3"
               stroke="var(--color-border)"
-              strokeOpacity={0.5}
+              strokeOpacity={0.4}
             />
             <XAxis
               dataKey="period"
-              tick={{ fontSize: 12, fontFamily: "Outfit", fill: "var(--color-muted-foreground)" }}
+              tick={{ fontSize: 11, fontFamily: "Outfit, system-ui, sans-serif", fill: "var(--color-muted-foreground)" }}
               axisLine={{ stroke: "var(--color-border)" }}
               tickLine={false}
-              label={
-                xLabel
-                  ? {
-                      value: xLabel,
-                      position: "insideBottom",
-                      offset: -4,
-                      style: { fontSize: 11, fontFamily: "Outfit", fill: "var(--color-muted-foreground)" },
-                    }
-                  : undefined
-              }
+              interval="preserveStartEnd"
             />
             <YAxis
-              tick={{ fontSize: 11, fontFamily: "JetBrains Mono", fill: "var(--color-muted-foreground)" }}
+              tick={{ fontSize: 11, fontFamily: "'JetBrains Mono', ui-monospace, monospace", fill: "var(--color-muted-foreground)" }}
               axisLine={{ stroke: "var(--color-border)" }}
               tickLine={false}
-              label={
-                yLabel
-                  ? {
-                      value: yLabel,
-                      angle: -90,
-                      position: "insideLeft",
-                      offset: 4,
-                      style: { fontSize: 11, fontFamily: "Outfit", fill: "var(--color-muted-foreground)" },
-                    }
-                  : undefined
-              }
+              width={44}
             />
             <Tooltip content={<CustomTooltip />} />
 
@@ -173,8 +154,8 @@ function TimeSeriesChart({
               name="Histórico"
               stroke="var(--color-chart-1)"
               strokeWidth={2}
-              dot={{ r: 4, fill: "var(--color-chart-1)", strokeWidth: 0 }}
-              activeDot={{ r: 6 }}
+              dot={{ r: 3, fill: "var(--color-chart-1)", strokeWidth: 0 }}
+              activeDot={{ r: 5 }}
               connectNulls={false}
             />
 
@@ -200,14 +181,14 @@ function TimeSeriesChart({
                 name="Previsão"
                 stroke="var(--color-chart-3)"
                 strokeWidth={2}
-                dot={{ r: 4, fill: "var(--color-chart-3)", strokeWidth: 0 }}
+                dot={{ r: 3, fill: "var(--color-chart-3)", strokeWidth: 0 }}
                 activeDot={{ r: 6 }}
                 connectNulls={false}
               />
             )}
 
             <Legend
-              wrapperStyle={{ fontSize: 12, fontFamily: "Outfit" }}
+              wrapperStyle={{ fontSize: 12, fontFamily: "Outfit, system-ui, sans-serif", paddingTop: 8 }}
               iconType="plainline"
             />
           </LineChart>
