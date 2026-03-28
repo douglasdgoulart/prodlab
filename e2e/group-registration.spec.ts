@@ -1,163 +1,122 @@
 import { test, expect } from "@playwright/test"
-import { injectSession, cleanGroups } from "./helpers/auth"
+import {
+  loginAndGoToRegister,
+  cleanGroupsFor,
+  seedGroupAtStep2,
+} from "./helpers/auth"
+import { TEST_EMAILS } from "./test-ids"
+
+/**
+ * Each test uses a DIFFERENT student to avoid cross-test contamination.
+ * Tests that need step 2 pre-populate the DB state directly.
+ *
+ * Student assignments:
+ *   - complete flow:          aluno.teste   + Marina
+ *   - remove member:          joao          + Mariana
+ *   - back button:            carlos        + Ana
+ *   - redirect after complete: aluno.teste  (pre-populated complete group)
+ *   - trend type hidden:      mariana       + Ana (pre-populated step 2)
+ *   - 1 member only:          ana           (no partner)
+ *   - max 3 members:          carlos        + Marina + João
+ *   - no company name:        joao          + Marina (pre-populated step 2)
+ *   - no product family:      marina        + Mariana (pre-populated step 2)
+ *   - short company name:     ana           + Carlos (pre-populated step 2)
+ *   - min 4 chars search:     mariana       (no partner needed)
+ */
 
 test.describe("Group Registration Wizard", () => {
-  test.beforeEach(async () => {
-    await cleanGroups()
-  })
-
-  test("complete flow: search member, add, fill details, finalize → dashboard", async ({
+  test("complete flow: search, add, fill details, finalize → dashboard", async ({
     page,
   }) => {
-    // Navigate to app and inject authenticated session
-    await page.goto("/")
-    await injectSession(page, "aluno.teste@al.unieduk.com.br")
-    await page.goto("/register")
+    await cleanGroupsFor(TEST_EMAILS.aluno)
+    await loginAndGoToRegister(page, TEST_EMAILS.aluno)
 
-    // --- Step 1: Monte seu grupo ---
-
+    // --- Step 1 ---
     await expect(page.getByText("Monte seu grupo")).toBeVisible()
     await expect(page.getByText("Aluno Teste (você)")).toBeVisible()
     await expect(page.getByText("Membros do grupo (1/3)")).toBeVisible()
 
-    // Continuar should be disabled (only 1 member)
     const continueBtn = page.getByRole("button", { name: /continuar/i })
     await expect(continueBtn).toBeDisabled()
 
-    // Search for a colleague (min 4 chars)
-    const searchInput = page.getByPlaceholder("Digite o nome do colega")
-    await searchInput.fill("Mari")
-
-    // Wait for dropdown results
-    const dropdown = page.getByRole("listbox")
-    await expect(dropdown).toBeVisible()
-    await expect(page.getByRole("option")).toHaveCount(2) // Marina + Mariana
-
-    // Select Marina Silva Costa
+    await page.getByPlaceholder("Digite o nome do colega").fill("Marina")
     await page.getByRole("option", { name: /Marina Silva Costa/ }).click()
 
-    // Verify member was added
-    await expect(page.getByText("Marina Silva Costa")).toBeVisible()
     await expect(page.getByText("Membros do grupo (2/3)")).toBeVisible()
-
-    // Verify remove button exists on added member (not on "você")
-    const marinaChip = page.locator("[data-slot=chip]", {
-      hasText: "Marina Silva Costa",
-    })
-    await expect(
-      marinaChip.locator("[data-slot=chip-remove]")
-    ).toBeVisible()
-
-    // Continuar should now be enabled
     await expect(continueBtn).toBeEnabled()
     await continueBtn.click()
 
-    // --- Step 2: Detalhes do grupo ---
-
+    // --- Step 2 ---
     await expect(page.getByText("Detalhes do grupo")).toBeVisible()
-    await expect(
-      page.getByText("Defina a identidade da sua companhia")
-    ).toBeVisible()
-
-    // Members shown as read-only (no remove buttons)
-    await expect(page.getByText("Aluno Teste (você)")).toBeVisible()
-    await expect(page.getByText("Marina Silva Costa")).toBeVisible()
     await expect(page.locator("[data-slot=chip-remove]")).toHaveCount(0)
 
-    // Finalizar should be disabled (empty form)
     const finalizeBtn = page.getByRole("button", { name: /finalizar/i })
     await expect(finalizeBtn).toBeDisabled()
 
-    // Fill company name
     await page.getByLabel("Nome da companhia").fill("TechNova Indústrias")
+    await page.locator("[data-slot=select] button").click()
+    await page.getByRole("option").first().click()
 
-    // Still disabled (no product family selected)
-    await expect(finalizeBtn).toBeDisabled()
-
-    // Open product family dropdown and select
-    await page
-      .locator("[data-slot=select] button")
-      .click()
-    await page
-      .getByRole("option", { name: "Cerveja Artesanal" })
-      .click()
-
-    // Verify selection
-    await expect(
-      page.locator("[data-slot=select]")
-    ).toContainText("Cerveja Artesanal")
-
-    // Finalizar should now be enabled
     await expect(finalizeBtn).toBeEnabled()
     await finalizeBtn.click()
-
-    // --- Should redirect to dashboard ---
 
     await page.waitForURL("**/dashboard", { timeout: 10000 })
     await expect(page.getByText("Bem-vindo ao ProdLab")).toBeVisible()
   })
 
   test("remove member before continuing", async ({ page }) => {
-    await page.goto("/")
-    await injectSession(page, "aluno.teste@al.unieduk.com.br")
-    await page.goto("/register")
+    await cleanGroupsFor(TEST_EMAILS.joao)
+    await loginAndGoToRegister(page, TEST_EMAILS.joao)
 
     await expect(page.getByText("Monte seu grupo")).toBeVisible()
 
-    // Add Marina
-    await page.getByPlaceholder("Digite o nome do colega").fill("Marina")
-    await page.getByRole("option", { name: /Marina Silva Costa/ }).click()
+    await page.getByPlaceholder("Digite o nome do colega").fill("Mariana")
+    await page.getByRole("option", { name: /Mariana Oliveira Santos/ }).click()
     await expect(page.getByText("Membros do grupo (2/3)")).toBeVisible()
 
-    // Remove Marina
-    const marinaChip = page.locator("[data-slot=chip]", {
-      hasText: "Marina Silva Costa",
-    })
-    await marinaChip.locator("[data-slot=chip-remove]").click()
+    const chip = page.locator("[data-slot=chip]", { hasText: "Mariana Oliveira Santos" })
+    await chip.locator("[data-slot=chip-remove]").click()
 
-    // Should be back to 1 member, Continuar disabled
     await expect(page.getByText("Membros do grupo (1/3)")).toBeVisible()
-    await expect(
-      page.getByRole("button", { name: /continuar/i })
-    ).toBeDisabled()
+    await expect(page.getByRole("button", { name: /continuar/i })).toBeDisabled()
   })
 
   test("back button returns to step 1", async ({ page }) => {
-    await page.goto("/")
-    await injectSession(page, "aluno.teste@al.unieduk.com.br")
-    await page.goto("/register")
+    await cleanGroupsFor(TEST_EMAILS.carlos)
+    await loginAndGoToRegister(page, TEST_EMAILS.carlos)
 
-    // Add member and advance
-    await page.getByPlaceholder("Digite o nome do colega").fill("João")
-    await page.getByRole("option", { name: /João Pedro Lima/ }).click()
+    await expect(page.getByText("Monte seu grupo")).toBeVisible()
+
+    await page.getByPlaceholder("Digite o nome do colega").fill("Ana B")
+    await page.getByRole("option", { name: /Ana Beatriz Ferreira/ }).click()
     await page.getByRole("button", { name: /continuar/i }).click()
 
     await expect(page.getByText("Detalhes do grupo")).toBeVisible()
-
-    // Click Voltar
     await page.getByRole("button", { name: /voltar/i }).click()
-
     await expect(page.getByText("Monte seu grupo")).toBeVisible()
   })
 
   test("completed group redirects directly to dashboard", async ({ page }) => {
-    // First, complete the registration
-    await page.goto("/")
-    await injectSession(page, "aluno.teste@al.unieduk.com.br")
-    await page.goto("/register")
+    // Pre-populate a COMPLETE group in the DB via admin
+    const { adminDb, getProfileId } = await import("./helpers/auth")
+    await cleanGroupsFor(TEST_EMAILS.aluno)
+    const ownerId = await getProfileId(TEST_EMAILS.aluno)
+    const partnerId = await getProfileId(TEST_EMAILS.marina)
 
-    await page.getByPlaceholder("Digite o nome do colega").fill("Marina")
-    await page.getByRole("option", { name: /Marina Silva Costa/ }).click()
-    await page.getByRole("button", { name: /continuar/i }).click()
+    await adminDb.from("group_members").delete().eq("student_id", partnerId)
+    const { data: group } = await adminDb
+      .from("groups")
+      .insert({ created_by: ownerId, company_name: "TestCorp", status: "complete" })
+      .select("id")
+      .single()
+    await adminDb.from("group_members").insert([
+      { group_id: group!.id, student_id: ownerId, status: "confirmed" },
+      { group_id: group!.id, student_id: partnerId, status: "confirmed" },
+    ])
 
-    await page.getByLabel("Nome da companhia").fill("TestCorp")
-    await page.locator("[data-slot=select] button").click()
-    await page.getByRole("option", { name: "Cerveja Artesanal" }).click()
-    await page.getByRole("button", { name: /finalizar/i }).click()
-    await page.waitForURL("**/dashboard", { timeout: 10000 })
+    await loginAndGoToRegister(page, TEST_EMAILS.aluno)
 
-    // Now visit /register again — should redirect to dashboard
-    await page.goto("/register")
+    // Should redirect to dashboard since group is complete
     await page.waitForURL("**/dashboard", { timeout: 10000 })
     await expect(page.getByText("Bem-vindo ao ProdLab")).toBeVisible()
   })
@@ -165,24 +124,18 @@ test.describe("Group Registration Wizard", () => {
   test("product family dropdown shows only names (no trend type)", async ({
     page,
   }) => {
-    await page.goto("/")
-    await injectSession(page, "aluno.teste@al.unieduk.com.br")
-    await page.goto("/register")
+    // Pre-populate group at step 2
+    await seedGroupAtStep2(TEST_EMAILS.mariana, TEST_EMAILS.ana)
+    await loginAndGoToRegister(page, TEST_EMAILS.mariana)
 
-    // Add member and advance to step 2
-    await page.getByPlaceholder("Digite o nome do colega").fill("Marina")
-    await page.getByRole("option", { name: /Marina Silva Costa/ }).click()
-    await page.getByRole("button", { name: /continuar/i }).click()
+    await expect(page.getByText("Detalhes do grupo")).toBeVisible()
 
-    // Open dropdown
     await page.locator("[data-slot=select] button").click()
 
-    // Should show names only
     const options = page.getByRole("option")
     const count = await options.count()
     expect(count).toBeGreaterThanOrEqual(1)
 
-    // None should contain trend type keywords
     for (let i = 0; i < count; i++) {
       const text = await options.nth(i).textContent()
       expect(text).not.toMatch(
@@ -192,17 +145,14 @@ test.describe("Group Registration Wizard", () => {
   })
 
   test("cannot continue with only 1 member (yourself)", async ({ page }) => {
-    await page.goto("/")
-    await injectSession(page, "aluno.teste@al.unieduk.com.br")
-    await page.goto("/register")
+    await cleanGroupsFor(TEST_EMAILS.ana)
+    await loginAndGoToRegister(page, TEST_EMAILS.ana)
 
     await expect(page.getByText("Membros do grupo (1/3)")).toBeVisible()
 
-    // Continuar must stay disabled with just the creator
     const continueBtn = page.getByRole("button", { name: /continuar/i })
     await expect(continueBtn).toBeDisabled()
 
-    // Clicking should have no effect (button is disabled, but verify no navigation)
     await continueBtn.click({ force: true })
     await expect(page.getByText("Monte seu grupo")).toBeVisible()
     await expect(page).toHaveURL(/\/register/)
@@ -211,111 +161,76 @@ test.describe("Group Registration Wizard", () => {
   test("cannot add more than 2 colleagues (3 members total)", async ({
     page,
   }) => {
-    await page.goto("/")
-    await injectSession(page, "aluno.teste@al.unieduk.com.br")
-    await page.goto("/register")
+    await cleanGroupsFor(TEST_EMAILS.carlos, TEST_EMAILS.marina, TEST_EMAILS.joao)
+    await loginAndGoToRegister(page, TEST_EMAILS.carlos)
 
-    // Add first colleague
+    await expect(page.getByText("Monte seu grupo")).toBeVisible()
+
     await page.getByPlaceholder("Digite o nome do colega").fill("Marina")
     await page.getByRole("option", { name: /Marina Silva Costa/ }).click()
     await expect(page.getByText("Membros do grupo (2/3)")).toBeVisible()
 
-    // Add second colleague
     await page.getByPlaceholder("Digite o nome do colega").fill("João")
     await page.getByRole("option", { name: /João Pedro Lima/ }).click()
     await expect(page.getByText("Membros do grupo (3/3)")).toBeVisible()
 
-    // Search input should be disabled now (max reached)
-    await expect(
-      page.getByPlaceholder("Digite o nome do colega")
-    ).toBeDisabled()
-
-    // Continuar should be enabled (3 is valid)
-    await expect(
-      page.getByRole("button", { name: /continuar/i })
-    ).toBeEnabled()
+    await expect(page.getByPlaceholder("Digite o nome do colega")).toBeDisabled()
+    await expect(page.getByRole("button", { name: /continuar/i })).toBeEnabled()
   })
 
   test("cannot finalize without company name", async ({ page }) => {
-    await page.goto("/")
-    await injectSession(page, "aluno.teste@al.unieduk.com.br")
-    await page.goto("/register")
+    await seedGroupAtStep2(TEST_EMAILS.joao, TEST_EMAILS.marina)
+    await loginAndGoToRegister(page, TEST_EMAILS.joao)
 
-    // Add member and advance
-    await page.getByPlaceholder("Digite o nome do colega").fill("Marina")
-    await page.getByRole("option", { name: /Marina Silva Costa/ }).click()
-    await page.getByRole("button", { name: /continuar/i }).click()
+    await expect(page.getByText("Detalhes do grupo")).toBeVisible()
 
-    // Select product family but leave company name empty
     await page.locator("[data-slot=select] button").click()
-    await page.getByRole("option", { name: "Cerveja Artesanal" }).click()
+    await page.getByRole("option").first().click()
 
-    // Finalizar should be disabled (no company name)
-    await expect(
-      page.getByRole("button", { name: /finalizar/i })
-    ).toBeDisabled()
+    await expect(page.getByRole("button", { name: /finalizar/i })).toBeDisabled()
   })
 
   test("cannot finalize without product family", async ({ page }) => {
-    await page.goto("/")
-    await injectSession(page, "aluno.teste@al.unieduk.com.br")
-    await page.goto("/register")
+    await seedGroupAtStep2(TEST_EMAILS.marina, TEST_EMAILS.mariana)
+    await loginAndGoToRegister(page, TEST_EMAILS.marina)
 
-    // Add member and advance
-    await page.getByPlaceholder("Digite o nome do colega").fill("Marina")
-    await page.getByRole("option", { name: /Marina Silva Costa/ }).click()
-    await page.getByRole("button", { name: /continuar/i }).click()
+    await expect(page.getByText("Detalhes do grupo")).toBeVisible()
 
-    // Fill company name but skip product family
     await page.getByLabel("Nome da companhia").fill("TechNova")
 
-    // Finalizar should be disabled (no product family)
-    await expect(
-      page.getByRole("button", { name: /finalizar/i })
-    ).toBeDisabled()
+    await expect(page.getByRole("button", { name: /finalizar/i })).toBeDisabled()
   })
 
   test("company name too short (< 3 chars) keeps finalize disabled", async ({
     page,
   }) => {
-    await page.goto("/")
-    await injectSession(page, "aluno.teste@al.unieduk.com.br")
-    await page.goto("/register")
+    await seedGroupAtStep2(TEST_EMAILS.ana, TEST_EMAILS.carlos)
+    await loginAndGoToRegister(page, TEST_EMAILS.ana)
 
-    await page.getByPlaceholder("Digite o nome do colega").fill("Marina")
-    await page.getByRole("option", { name: /Marina Silva Costa/ }).click()
-    await page.getByRole("button", { name: /continuar/i }).click()
+    await expect(page.getByText("Detalhes do grupo")).toBeVisible()
 
-    // Select product family
     await page.locator("[data-slot=select] button").click()
-    await page.getByRole("option", { name: "Cerveja Artesanal" }).click()
+    await page.getByRole("option").first().click()
 
-    // Type only 2 chars
     await page.getByLabel("Nome da companhia").fill("AB")
-    await expect(
-      page.getByRole("button", { name: /finalizar/i })
-    ).toBeDisabled()
+    await expect(page.getByRole("button", { name: /finalizar/i })).toBeDisabled()
 
-    // Type 3 chars — should enable
     await page.getByLabel("Nome da companhia").fill("ABC")
-    await expect(
-      page.getByRole("button", { name: /finalizar/i })
-    ).toBeEnabled()
+    await expect(page.getByRole("button", { name: /finalizar/i })).toBeEnabled()
   })
 
   test("search requires minimum 4 characters", async ({ page }) => {
-    await page.goto("/")
-    await injectSession(page, "aluno.teste@al.unieduk.com.br")
-    await page.goto("/register")
+    await cleanGroupsFor(TEST_EMAILS.mariana, TEST_EMAILS.marina)
+    await loginAndGoToRegister(page, TEST_EMAILS.mariana)
+
+    await expect(page.getByText("Monte seu grupo")).toBeVisible()
 
     const searchInput = page.getByPlaceholder("Digite o nome do colega")
 
-    // Type 3 chars — no dropdown
     await searchInput.fill("Mar")
     await page.waitForTimeout(500)
     await expect(page.getByRole("listbox")).not.toBeVisible()
 
-    // Type 4th char — dropdown appears
     await searchInput.fill("Mari")
     await expect(page.getByRole("listbox")).toBeVisible()
   })

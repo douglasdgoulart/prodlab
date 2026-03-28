@@ -1,22 +1,16 @@
 import { test, expect } from "@playwright/test"
-import { createClient } from "@supabase/supabase-js"
-import { injectSession, cleanGroups } from "./helpers/auth"
-
-const supabase = createClient(
-  process.env.VITE_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  { auth: { autoRefreshToken: false, persistSession: false } }
-)
+import {
+  adminDb,
+  getProfileId,
+  loginAndGoToRegister,
+  cleanGroupsFor,
+} from "./helpers/auth"
+import { TEST_EMAILS } from "./test-ids"
 
 test.describe("Pessimistic Reservation", () => {
-  test.beforeEach(async () => {
-    await cleanGroups()
-  })
-
   test("adding a member creates a 'reserved' record in the database", async ({ page }) => {
-    await page.goto("/")
-    await injectSession(page, "aluno.teste@al.unieduk.com.br")
-    await page.goto("/register")
+    await cleanGroupsFor(TEST_EMAILS.aluno, TEST_EMAILS.marina)
+    await loginAndGoToRegister(page, TEST_EMAILS.aluno)
     await expect(page.getByText("Monte seu grupo")).toBeVisible({ timeout: 10000 })
 
     // Add Marina via search
@@ -25,8 +19,8 @@ test.describe("Pessimistic Reservation", () => {
     await expect(page.getByText("Membros do grupo (2/3)")).toBeVisible()
 
     // Verify in the database: Marina should have status 'reserved'
-    const marinaId = (await supabase.from("profiles").select("id").eq("email", "marina.silva@al.unieduk.com.br").single()).data!.id
-    const { data: member } = await supabase
+    const marinaId = await getProfileId(TEST_EMAILS.marina)
+    const { data: member } = await adminDb
       .from("group_members")
       .select("status")
       .eq("student_id", marinaId)
@@ -38,24 +32,25 @@ test.describe("Pessimistic Reservation", () => {
 
   test("reserved student is filtered from search results", async ({ page }) => {
     // Pre-populate: Carlos already reserved Marina directly in DB
-    const carlosId = (await supabase.from("profiles").select("id").eq("email", "carlos.souza@al.unieduk.com.br").single()).data!.id
-    const marinaId = (await supabase.from("profiles").select("id").eq("email", "marina.silva@al.unieduk.com.br").single()).data!.id
+    await cleanGroupsFor(TEST_EMAILS.carlos)
+    const carlosId = await getProfileId(TEST_EMAILS.carlos)
+    const marinaId = await getProfileId(TEST_EMAILS.marina)
+    await adminDb.from("group_members").delete().eq("student_id", marinaId)
 
-    const { data: group } = await supabase
+    const { data: group } = await adminDb
       .from("groups")
       .insert({ created_by: carlosId })
       .select("id")
       .single()
 
-    await supabase.from("group_members").insert([
+    await adminDb.from("group_members").insert([
       { group_id: group!.id, student_id: carlosId, status: "confirmed" },
       { group_id: group!.id, student_id: marinaId, status: "reserved", reserved_at: new Date().toISOString() },
     ])
 
-    // Login as aluno.teste — Marina should NOT appear
-    await page.goto("/")
-    await injectSession(page, "aluno.teste@al.unieduk.com.br")
-    await page.goto("/register")
+    // Login as joao.pedro — Marina should NOT appear
+    await cleanGroupsFor(TEST_EMAILS.joao, TEST_EMAILS.mariana)
+    await loginAndGoToRegister(page, TEST_EMAILS.joao)
     await expect(page.getByText("Monte seu grupo")).toBeVisible({ timeout: 10000 })
 
     await page.getByPlaceholder("Digite o nome do colega").fill("Marina Silva")

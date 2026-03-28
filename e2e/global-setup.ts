@@ -1,7 +1,15 @@
 import { createClient } from "@supabase/supabase-js"
 import { PRODUCT_FAMILY_IDS, TEST_EMAILS, ALL_TEST_EMAILS } from "./test-ids"
 
+// Dedicated admin client — never used for verifyOtp
 const supabase = createClient(
+  process.env.VITE_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  { auth: { autoRefreshToken: false, persistSession: false } }
+)
+
+// Separate client for auth user creation
+const authClient = createClient(
   process.env.VITE_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
   { auth: { autoRefreshToken: false, persistSession: false } }
@@ -27,7 +35,7 @@ const PRODUCT_FAMILIES = [
 ]
 
 async function ensureUser(email: string, name: string): Promise<string> {
-  const { data, error } = await supabase.auth.admin.createUser({
+  const { data, error } = await authClient.auth.admin.createUser({
     email,
     password: "teste12345",
     email_confirm: true,
@@ -37,7 +45,7 @@ async function ensureUser(email: string, name: string): Promise<string> {
   if (data?.user) return data.user.id
 
   if (error?.message?.includes("already been registered")) {
-    const { data: users } = await supabase.auth.admin.listUsers()
+    const { data: users } = await authClient.auth.admin.listUsers()
     const user = users.users.find((u) => u.email === email)
     if (user) return user.id
   }
