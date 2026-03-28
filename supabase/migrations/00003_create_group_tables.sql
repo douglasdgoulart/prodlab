@@ -56,15 +56,39 @@ WHERE role = 'student'
   );
 
 -- ============================================================
+-- FUNCTION: get_student_product_families
+-- Students must NOT see trend_type — it's pedagogical data
+-- revealed during exercises. This SECURITY DEFINER function
+-- bypasses RLS and returns only id + name.
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION get_student_product_families()
+RETURNS TABLE(id uuid, name text)
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT id, name FROM product_families ORDER BY name;
+$$;
+
+-- ============================================================
 -- RLS: product_families
+-- Only teachers can read the full table (includes trend_type).
+-- Students access product families through the function above.
 -- ============================================================
 
 ALTER TABLE product_families ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "product_families_select_authenticated"
+CREATE POLICY "product_families_select_teachers"
   ON product_families FOR SELECT
   TO authenticated
-  USING (true);
+  USING (
+    EXISTS (
+      SELECT 1 FROM profiles
+      WHERE id = (SELECT auth.uid())
+        AND role = 'teacher'
+    )
+  );
 
 CREATE POLICY "product_families_insert_teachers"
   ON product_families FOR INSERT
