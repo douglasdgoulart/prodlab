@@ -11,7 +11,7 @@ CREATE TABLE product_families (
   id               uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name             text NOT NULL,
   trend_type       text NOT NULL CHECK (trend_type IN ('seasonal','growth','decline','stable','seasonal_growth','seasonal_decline')),
-  created_by       uuid REFERENCES profiles(id) ON DELETE SET NULL,
+  created_by       uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   created_at       timestamptz DEFAULT now()
 );
 
@@ -20,7 +20,7 @@ CREATE TABLE groups (
   company_name        text,
   product_family_id   uuid REFERENCES product_families(id) ON DELETE SET NULL,
   status              text NOT NULL DEFAULT 'forming' CHECK (status IN ('forming','complete')),
-  created_by          uuid REFERENCES profiles(id) ON DELETE SET NULL,
+  created_by          uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   created_at          timestamptz DEFAULT now()
 );
 
