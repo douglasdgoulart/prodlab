@@ -105,26 +105,38 @@ function TimeSeriesChart({
       )}
 
       <div className="rounded-xl border border-border bg-card p-4">
-        <ResponsiveContainer width="100%" height={height}>
-          <LineChart data={chartData} margin={{ top: 8, right: 24, left: 0, bottom: 4 }}>
-            <CartesianGrid
-              strokeDasharray="3 3"
-              stroke="var(--color-border)"
-              strokeOpacity={0.4}
-            />
-            <XAxis
-              dataKey="period"
-              tick={{ fontSize: 11, fontFamily: "Outfit, system-ui, sans-serif", fill: "var(--color-muted-foreground)" }}
-              axisLine={{ stroke: "var(--color-border)" }}
-              tickLine={false}
-              interval="preserveStartEnd"
-            />
-            <YAxis
-              tick={{ fontSize: 11, fontFamily: "'JetBrains Mono', ui-monospace, monospace", fill: "var(--color-muted-foreground)" }}
-              axisLine={{ stroke: "var(--color-border)" }}
-              tickLine={false}
-              width={44}
-            />
+        <div className="flex">
+          {yLabel && (
+            <div className="flex items-center justify-center -mr-2">
+              <span
+                className="text-[11px] text-muted-foreground font-sans"
+                style={{ writingMode: "vertical-lr", transform: "rotate(180deg)" }}
+              >
+                {yLabel}
+              </span>
+            </div>
+          )}
+          <div className="flex-1 flex flex-col">
+            <ResponsiveContainer width="100%" height={height}>
+              <LineChart data={chartData} margin={{ top: 8, right: 24, left: 0, bottom: 4 }}>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="var(--color-border)"
+                  strokeOpacity={0.4}
+                />
+                <XAxis
+                  dataKey="period"
+                  tick={{ fontSize: 11, fontFamily: "Outfit, system-ui, sans-serif", fill: "var(--color-muted-foreground)" }}
+                  axisLine={{ stroke: "var(--color-border)" }}
+                  tickLine={false}
+                  interval="preserveStartEnd"
+                />
+                <YAxis
+                  tick={{ fontSize: 11, fontFamily: "'JetBrains Mono', ui-monospace, monospace", fill: "var(--color-muted-foreground)" }}
+                  axisLine={{ stroke: "var(--color-border)" }}
+                  tickLine={false}
+                  width={44}
+                />
             <Tooltip content={<CustomTooltip />} />
 
             {/* Forecast area highlight */}
@@ -191,8 +203,15 @@ function TimeSeriesChart({
               wrapperStyle={{ fontSize: 12, fontFamily: "Outfit, system-ui, sans-serif", paddingTop: 8 }}
               iconType="plainline"
             />
-          </LineChart>
-        </ResponsiveContainer>
+              </LineChart>
+            </ResponsiveContainer>
+            {xLabel && (
+              <p className="text-center text-[11px] text-muted-foreground font-sans -mt-1">
+                {xLabel}
+              </p>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   )
