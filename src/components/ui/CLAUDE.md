@@ -77,6 +77,8 @@ Componentes compostos: **Card**, **Avatar**, **DropdownMenu**
 | **Avatar** | — | sm, default, lg | `avatar.tsx` |
 | **Separator** | — | — (orientação: horizontal, vertical) | `separator.tsx` |
 | **DropdownMenu** | item: default, destructive | — | `dropdown-menu.tsx` |
+| **TimeSeriesChart** | data-driven (default, with-trend, with-forecast, full) | — | `chart/time-series-chart.tsx` |
+| **ChartMadBadge** | low, medium, high (severity) | — | `chart/chart-mad-badge.tsx` |
 
 ## Design tokens
 
