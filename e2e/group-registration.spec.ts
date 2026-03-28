@@ -190,4 +190,133 @@ test.describe("Group Registration Wizard", () => {
       )
     }
   })
+
+  test("cannot continue with only 1 member (yourself)", async ({ page }) => {
+    await page.goto("/")
+    await injectSession(page, "aluno.teste@al.unieduk.com.br")
+    await page.goto("/register")
+
+    await expect(page.getByText("Membros do grupo (1/3)")).toBeVisible()
+
+    // Continuar must stay disabled with just the creator
+    const continueBtn = page.getByRole("button", { name: /continuar/i })
+    await expect(continueBtn).toBeDisabled()
+
+    // Clicking should have no effect (button is disabled, but verify no navigation)
+    await continueBtn.click({ force: true })
+    await expect(page.getByText("Monte seu grupo")).toBeVisible()
+    await expect(page).toHaveURL(/\/register/)
+  })
+
+  test("cannot add more than 2 colleagues (3 members total)", async ({
+    page,
+  }) => {
+    await page.goto("/")
+    await injectSession(page, "aluno.teste@al.unieduk.com.br")
+    await page.goto("/register")
+
+    // Add first colleague
+    await page.getByPlaceholder("Digite o nome do colega").fill("Marina")
+    await page.getByRole("option", { name: /Marina Silva Costa/ }).click()
+    await expect(page.getByText("Membros do grupo (2/3)")).toBeVisible()
+
+    // Add second colleague
+    await page.getByPlaceholder("Digite o nome do colega").fill("João")
+    await page.getByRole("option", { name: /João Pedro Lima/ }).click()
+    await expect(page.getByText("Membros do grupo (3/3)")).toBeVisible()
+
+    // Search input should be disabled now (max reached)
+    await expect(
+      page.getByPlaceholder("Digite o nome do colega")
+    ).toBeDisabled()
+
+    // Continuar should be enabled (3 is valid)
+    await expect(
+      page.getByRole("button", { name: /continuar/i })
+    ).toBeEnabled()
+  })
+
+  test("cannot finalize without company name", async ({ page }) => {
+    await page.goto("/")
+    await injectSession(page, "aluno.teste@al.unieduk.com.br")
+    await page.goto("/register")
+
+    // Add member and advance
+    await page.getByPlaceholder("Digite o nome do colega").fill("Marina")
+    await page.getByRole("option", { name: /Marina Silva Costa/ }).click()
+    await page.getByRole("button", { name: /continuar/i }).click()
+
+    // Select product family but leave company name empty
+    await page.locator("[data-slot=select] button").click()
+    await page.getByRole("option", { name: "Cerveja Artesanal" }).click()
+
+    // Finalizar should be disabled (no company name)
+    await expect(
+      page.getByRole("button", { name: /finalizar/i })
+    ).toBeDisabled()
+  })
+
+  test("cannot finalize without product family", async ({ page }) => {
+    await page.goto("/")
+    await injectSession(page, "aluno.teste@al.unieduk.com.br")
+    await page.goto("/register")
+
+    // Add member and advance
+    await page.getByPlaceholder("Digite o nome do colega").fill("Marina")
+    await page.getByRole("option", { name: /Marina Silva Costa/ }).click()
+    await page.getByRole("button", { name: /continuar/i }).click()
+
+    // Fill company name but skip product family
+    await page.getByLabel("Nome da companhia").fill("TechNova")
+
+    // Finalizar should be disabled (no product family)
+    await expect(
+      page.getByRole("button", { name: /finalizar/i })
+    ).toBeDisabled()
+  })
+
+  test("company name too short (< 3 chars) keeps finalize disabled", async ({
+    page,
+  }) => {
+    await page.goto("/")
+    await injectSession(page, "aluno.teste@al.unieduk.com.br")
+    await page.goto("/register")
+
+    await page.getByPlaceholder("Digite o nome do colega").fill("Marina")
+    await page.getByRole("option", { name: /Marina Silva Costa/ }).click()
+    await page.getByRole("button", { name: /continuar/i }).click()
+
+    // Select product family
+    await page.locator("[data-slot=select] button").click()
+    await page.getByRole("option", { name: "Cerveja Artesanal" }).click()
+
+    // Type only 2 chars
+    await page.getByLabel("Nome da companhia").fill("AB")
+    await expect(
+      page.getByRole("button", { name: /finalizar/i })
+    ).toBeDisabled()
+
+    // Type 3 chars — should enable
+    await page.getByLabel("Nome da companhia").fill("ABC")
+    await expect(
+      page.getByRole("button", { name: /finalizar/i })
+    ).toBeEnabled()
+  })
+
+  test("search requires minimum 4 characters", async ({ page }) => {
+    await page.goto("/")
+    await injectSession(page, "aluno.teste@al.unieduk.com.br")
+    await page.goto("/register")
+
+    const searchInput = page.getByPlaceholder("Digite o nome do colega")
+
+    // Type 3 chars — no dropdown
+    await searchInput.fill("Mar")
+    await page.waitForTimeout(500)
+    await expect(page.getByRole("listbox")).not.toBeVisible()
+
+    // Type 4th char — dropdown appears
+    await searchInput.fill("Mari")
+    await expect(page.getByRole("listbox")).toBeVisible()
+  })
 })
