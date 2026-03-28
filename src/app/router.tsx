@@ -4,8 +4,10 @@ import { AuthCallback } from '../pages/AuthCallback';
 import { Dashboard } from '../pages/Dashboard';
 import { AdminDashboard } from '../pages/AdminDashboard';
 import { Unauthorized } from '../pages/Unauthorized';
+import { GroupRegistration } from '../pages/GroupRegistration';
 import { ProtectedRoute } from '../components/ProtectedRoute';
 import { RoleRoute } from '../components/RoleRoute';
+import { GroupRoute } from '../components/GroupRoute';
 
 export const router = createBrowserRouter([
   {
@@ -17,11 +19,23 @@ export const router = createBrowserRouter([
     element: <AuthCallback />,
   },
   {
+    path: '/register',
+    element: (
+      <ProtectedRoute>
+        <RoleRoute allowedRole="student">
+          <GroupRegistration />
+        </RoleRoute>
+      </ProtectedRoute>
+    ),
+  },
+  {
     path: '/dashboard',
     element: (
       <ProtectedRoute>
         <RoleRoute allowedRole="student">
-          <Dashboard />
+          <GroupRoute>
+            <Dashboard />
+          </GroupRoute>
         </RoleRoute>
       </ProtectedRoute>
     ),
