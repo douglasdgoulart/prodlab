@@ -2,16 +2,36 @@ import { supabase } from "./supabase"
 import type { AvailableStudent, Group, GroupMember } from "@/types"
 
 /**
+ * Get the first class the student belongs to, or null if unassigned.
+ */
+export async function getStudentClass(
+  userId: string
+): Promise<{ id: string; name: string } | null> {
+  const { data, error } = await supabase
+    .from("class_members")
+    .select("class_id, classes:classes!class_id(id, name)")
+    .eq("student_id", userId)
+    .limit(1)
+    .single()
+
+  if (error || !data) return null
+  const cls = data.classes as unknown as { id: string; name: string }
+  return cls
+}
+
+/**
  * Search available students by name.
  * Uses a SECURITY DEFINER RPC that verifies caller is student/teacher,
  * filters by ILIKE, and excludes confirmed/reserved students.
  */
 export async function searchAvailableStudents(
   query: string,
+  classId: string,
   excludeIds: string[] = []
 ): Promise<AvailableStudent[]> {
   const { data, error } = await supabase.rpc("search_available_students", {
     search_query: query,
+    p_class_id: classId,
   })
 
   if (error) throw error
@@ -29,10 +49,10 @@ export async function searchAvailableStudents(
  * Create a new group and add the creator as the first member (confirmed).
  * Returns the group id.
  */
-export async function createGroup(creatorId: string): Promise<string> {
+export async function createGroup(creatorId: string, classId: string): Promise<string> {
   const { data: group, error: groupError } = await supabase
     .from("groups")
-    .insert({ created_by: creatorId })
+    .insert({ created_by: creatorId, class_id: classId })
     .select("id")
     .single()
 
