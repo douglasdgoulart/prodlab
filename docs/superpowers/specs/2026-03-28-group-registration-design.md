@@ -2,7 +2,17 @@
 
 **Data:** 2026-03-28
 **Branch:** `feature/completar-cadastro`
-**Mockups Stitch:** Projeto "Login ProdLab v2" (ID: `10955835608676345049`) -- telas "Cadastro de Grupo - Passo 1", "Formação de Grupo - Passo 1", "Cadastro de Grupo - Passo 2"
+**Mockups Stitch:** Projeto "Login ProdLab v2" (ID: `10955835608676345049`)
+
+### Referências visuais (Stitch)
+
+| Tela | Screen ID | Screenshot |
+|------|-----------|------------|
+| Cadastro de Grupo - Passo 1 | `d419c0564acc4c75afd4608336194889` | [screenshot](https://lh3.googleusercontent.com/aida/ADBb0uixZQ1JtTiAV-z2ehpkqERhh7g1Ib9fz_QWdWnn7lHntBLsW5ytvMJMwetbElIvLWIiO776ruyvzhhNLQu0vH31HMQdLdXb8eXa9HSekH-AGkBGk-HCqWsy_FVyQC7AnK6C3M9vYN0XNZNwCDeVYNhaeKVRspvhfYtbr98EyTIAKsfZRv9xb2glvkfmZEGXyptk7to-XSs8MX75DGH60aVgsJP-ZRMV2wL4IXDvhO0MeKjS3uAIjMoUfVY) |
+| Formação de Grupo - Passo 1 (variante) | `0f92a2c268664b31a92f8e61251426a4` | [screenshot](https://lh3.googleusercontent.com/aida/ADBb0uiGA6eD3DvtSZzuNUIsMzC3zuh5d5V16_1U9fiJGfY_x6cLAmiB1GpxCEDmH7kTSflJbGNDfsfUi-kqwm-MJXtRvs5pXQsbjzmckoPci-QaR3kuv5CD3G9RSDRXrXedgXJiEvsuZF36JJ2BTbauKQ6UA2wXKnf7QXeAneYtZ-bzXKNTrayh12mquIxM_PE0A-0hlha1GkYgAWydb1qWeHPjOAdUwCGUFSzTq71dvihAPwnBodSw9SnfwTY) |
+| Cadastro de Grupo - Passo 2 | `8c538393d558419ba704ee552b1fc5bd` | [screenshot](https://lh3.googleusercontent.com/aida/ADBb0ujlJyDpLWYSM6PXrGdqzyXqRFQxnTPRk4A3XbHCzZUF5XlPE_oPu8EzQjketi11npLljcZnGCor8QuFuvf8hsbaYPXbt75svPrYO8vpVUJa03FeSyE2z52KSpgXNha4YebAewIgirv19Zv-zcSbvWCFIGVd0vExHYFGdndEzRxqwJLnUT88vrr8j3TpAIwLMUyB-elc2-VCQWEcbAUfUJ5GAD6FiUhYF2VQajlwLN8ZGXcmd-q1dmTY5LU) |
+
+> **Nota:** Ignorar a barra de navegação superior gerada pelo Stitch nos mockups. O header/footer real é o `AppHeader`/`AppFooter` já existente no painel do aluno. O dropdown de família de produto no Passo 2 **não deve mostrar badges de tendência** -- apenas o nome da família.
 
 ---
 
