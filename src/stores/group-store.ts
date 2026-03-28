@@ -11,6 +11,7 @@ interface GroupState {
   step: number
   groupId: string | null
   group: Group | null
+  classId: string | null
   members: MemberWithName[]
   companyName: string
   productFamilyId: string
@@ -24,7 +25,7 @@ interface GroupState {
   setError: (error: string | null) => void
 
   // Async actions
-  initGroup: (userId: string) => Promise<void>
+  initGroup: (userId: string, classId: string) => Promise<void>
   loadExistingGroup: (userId: string) => Promise<"complete" | "forming" | "none">
   searchStudents: (query: string) => Promise<AvailableStudent[]>
   addMember: (student: AvailableStudent) => Promise<void>
@@ -38,6 +39,7 @@ const initialState = {
   step: 0,
   groupId: null,
   group: null,
+  classId: null,
   members: [],
   companyName: "",
   productFamilyId: "",
@@ -66,7 +68,7 @@ export const useGroupStore = create<GroupState>((set, get) => ({
       const { group, members } = result
 
       if (group.status === "complete") {
-        set({ group, members, loading: false })
+        set({ group, classId: group.class_id, members, loading: false })
         return "complete"
       }
 
@@ -87,6 +89,7 @@ export const useGroupStore = create<GroupState>((set, get) => ({
       set({
         groupId: group.id,
         group,
+        classId: group.class_id,
         members,
         step: 1, // Go to step 2 (details)
         companyName: group.company_name ?? "",
@@ -100,10 +103,10 @@ export const useGroupStore = create<GroupState>((set, get) => ({
     }
   },
 
-  initGroup: async (userId) => {
-    set({ loading: true, error: null })
+  initGroup: async (userId, classId) => {
+    set({ loading: true, error: null, classId })
     try {
-      const groupId = await groupApi.createGroup(userId)
+      const groupId = await groupApi.createGroup(userId, classId)
 
       const result = await groupApi.getUserGroup(userId)
       set({
@@ -119,9 +122,10 @@ export const useGroupStore = create<GroupState>((set, get) => ({
   },
 
   searchStudents: async (query) => {
-    const { members } = get()
+    const { members, classId } = get()
+    if (!classId) return []
     const excludeIds = members.map((m) => m.student_id)
-    return groupApi.searchAvailableStudents(query, excludeIds)
+    return groupApi.searchAvailableStudents(query, classId, excludeIds)
   },
 
   addMember: async (student) => {
