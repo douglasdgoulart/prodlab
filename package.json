@@ -8,10 +8,14 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "stories": "ladle serve",
-    "stories:build": "ladle build"
+    "stories:build": "ladle build",
+    "test:e2e": "export $(grep -v '^#' .env.local | xargs) && playwright test",
+    "test:e2e:headed": "export $(grep -v '^#' .env.local | xargs) && playwright test --headed",
+    "test:e2e:ui": "export $(grep -v '^#' .env.local | xargs) && playwright test --ui"
   },
   "devDependencies": {
     "@ladle/react": "^5.1.1",
+    "@playwright/test": "^1.58.2",
     "@tailwindcss/vite": "^4.2.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
